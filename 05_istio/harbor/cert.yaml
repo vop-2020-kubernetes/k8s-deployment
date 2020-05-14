@@ -1,0 +1,15 @@
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: harbor-ingress-cert
+  namespace: istio-system
+spec:
+  secretName: harbor-ingress-cert
+  dnsNames:
+    - "harbor.c0.kube8.ga"
+  issuerRef:
+    name: cloudflare-issuer
+    kind: ClusterIssuer
+  commonName: "harbor.c0.kube8.ga"
+

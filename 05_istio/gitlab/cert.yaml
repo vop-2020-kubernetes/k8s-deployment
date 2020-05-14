@@ -1,0 +1,17 @@
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: gitlab-ingress-cert
+  namespace: istio-system
+spec:
+  secretName: gitlab-ingress-cert
+  dnsNames:
+    - "gitlab.c0.kube8.ga"
+    - "minio.c0.kube8.ga"
+    - "registry.c0.kube8.ga"
+  issuerRef:
+    name: cloudflare-issuer
+    kind: ClusterIssuer
+  commonName: "gitlab.c0.kube8.ga"
+

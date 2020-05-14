@@ -1,0 +1,116 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: gitlab-gateway
+  namespace: gitlab
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 22
+      name: ssh-gitlab
+      protocol: TCP
+    hosts:
+    - gitlab.c0.kube8.ga
+  - port:
+      number: 80
+      name: http-gitlab
+      protocol: HTTP
+    hosts:
+    - gitlab.c0.kube8.ga
+    - minio.c0.kube8.ga
+    - registry.c0.kube8.ga
+    tls:
+      httpsRedirect: true
+  - port:
+      number: 443
+      name: https-gitlab
+      protocol: HTTPS
+    hosts:
+    - gitlab.c0.kube8.ga
+    - minio.c0.kube8.ga
+    - registry.c0.kube8.ga
+    tls:
+      credentialName: gitlab-ingress-cert
+      mode: SIMPLE
+      privateKey: sds
+      serverCertificate: sds
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: gitlab-ssh-virtual-service
+  namespace: gitlab
+spec:
+  hosts:
+  - gitlab.c0.kube8.ga
+  gateways:
+  - gitlab-gateway
+  tcp:
+  - match:
+    - port: 22
+    route:
+    - destination:
+        host: gitlab-gitlab-shell.gitlab.svc.cluster.local
+        port:
+          number: 22
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: gitlab-registry-virtual-service
+  namespace: gitlab
+spec:
+  hosts:
+  - registry.c0.kube8.ga
+  gateways:
+  - gitlab-gateway
+  http:
+  - route:
+    - destination:
+        host: gitlab-registry.gitlab.svc.cluster.local
+        port:
+          number: 5000
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: gitlab-http-virtual-service
+  namespace: gitlab
+spec:
+  hosts:
+  - gitlab.c0.kube8.ga
+  gateways:
+  - gitlab-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /admin/sidekiq
+    route:
+    - destination:
+        host: gitlab-unicorn.gitlab.svc.cluster.local
+        port:
+          number: 8080
+  - route:
+    - destination:
+        host: gitlab-unicorn.gitlab.svc.cluster.local
+        port:
+          number: 8181
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: gitlab-minio-virtual-service
+  namespace: gitlab
+spec:
+  hosts:
+  - minio.c0.kube8.ga
+  gateways:
+  - gitlab-gateway
+  http:
+  - route:
+    - destination:
+        host: gitlab-minio-svc.gitlab.svc.cluster.local
+        port:
+          number: 9000

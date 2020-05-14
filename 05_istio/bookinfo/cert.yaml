@@ -1,0 +1,15 @@
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: bookinfo-ingress-cert
+  namespace: istio-system
+spec:
+  secretName: bookinfo-ingress-cert
+  dnsNames:
+    - "bookinfo.c0.kube8.ga"
+  issuerRef:
+    name: cloudflare-issuer
+    kind: ClusterIssuer
+  commonName: "bookinfo.c0.kube8.ga"
+
